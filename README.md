@@ -1,169 +1,245 @@
-# NEXUS AI
+# NEXUS
 
-A modular personal intelligence and task-execution system built around free/local LLM inference, tools, retrieval, scoped memory, verification, and agent workflows.
+**A personal workbench for getting things done.**
 
-## Vision
+NEXUS is a general-purpose personal intelligence and task-execution workspace. Instead of starting a new chat for every problem, you give NEXUS an objective and it creates a persistent workspace around it — with a plan, relevant context, tools, results, and task history.
 
-NEXUS is not intended to be a single-purpose chatbot. The user should be able to give it a natural-language objective and have NEXUS create a task workspace, understand the task, select available capabilities, use relevant memory, plan the work, execute tools, verify results, and present the outcome cleanly.
+It is designed to help a person **research, think, learn, create, analyze, organize, and eventually take approved actions** from one clean interface.
 
-Examples include research, decision support, learning, coding, document creation, business analysis, project work, and eventually controlled interaction with external services. Specific services such as Instagram are examples of future capabilities, not core architecture.
+> **Prototype:** NEXUS is an early local-first prototype. The current release demonstrates persistent task workspaces, scoped memory, local Ollama execution, capability controls, and a customer-oriented workspace UI. External write actions are not yet production-ready.
 
-## Current Architecture
+## Why NEXUS?
+
+Most AI products are built around a conversation: ask a question, receive an answer, start again.
+
+NEXUS is built around **work**.
+
+A customer should be able to say:
+
+- “Research whether opening a convenience store in Islamabad makes sense.”
+- “Help me prepare for this interview and keep track of what I still need to learn.”
+- “Compare these three business ideas and tell me which deserves more investigation.”
+- “Analyze these files and turn the findings into a report.”
+- “Keep working on this project from where we left off.”
+
+NEXUS turns those requests into persistent, understandable workspaces rather than disposable chat sessions.
+
+## Customer Experience
+
+```text
+Tell NEXUS what you want to accomplish
+                 ↓
+          NEXUS creates a workspace
+                 ↓
+       Understands the objective
+                 ↓
+       Builds a practical plan
+                 ↓
+     Uses relevant tools + context
+                 ↓
+          Produces useful work
+                 ↓
+       Shows what it actually did
+                 ↓
+        Keeps the useful context
+                 ↓
+       Continue whenever you want
+```
+
+The customer should care about the **objective and outcome**, not agents, chains, prompts, tokens, or framework internals.
+
+## What the Prototype Demonstrates
+
+- Persistent task/workspace creation
+- Separate task-specific memory
+- User-editable personality and durable memory
+- Local model execution through Ollama
+- Capability availability checks
+- Calculator and web-search tooling
+- Execution status and task events
+- Conservative approval handling for side-effecting tasks
+- Explicit `unverified` result state when NEXUS has not independently verified an answer
+- Clean three-panel workspace UI
+
+## Interface
+
+The prototype uses a focused workspace layout:
+
+```text
+┌────────────────┬────────────────────────────────┬─────────────────┐
+│   WORKSPACES   │          ACTIVE TASK           │     CONTEXT     │
+│                │                                │                 │
+│   + New task   │  Objective                     │  Memory         │
+│                │                                │                 │
+│   Research     │  Plan                          │  Sources        │
+│   Interview    │  Execution                     │  Files          │
+│   Business     │                                │  Artifacts      │
+│                │  Result                        │                 │
+│   Settings     │  [ Tell NEXUS what to do ]    │                 │
+└────────────────┴────────────────────────────────┴─────────────────┘
+```
+
+The design deliberately avoids looking like a developer console or generic chatbot. Framework logs belong behind the experience.
+
+## Product Principles
+
+1. **Outcome over conversation.** NEXUS exists to help accomplish objectives, not maximize chat length.
+2. **Useful before impressive.** Every feature should solve a real customer problem.
+3. **Trust over theatrics.** Never claim something happened when it did not.
+4. **Visible progress.** Customers should understand what NEXUS is doing and why.
+5. **Customer control.** External or consequential actions require clear approval.
+6. **Context without clutter.** Keep useful information attached to the relevant task.
+7. **Local-first and affordable.** The core experience should work without requiring a paid AI subscription.
+8. **Provider independence.** Models and APIs are replaceable implementation details.
+9. **Simple customization.** Personality and durable memory should be editable without programming.
+10. **Real capabilities only.** If NEXUS cannot perform an action, it should say so clearly.
+
+## Product Roadmap
+
+### Prototype — current
+
+- [x] Persistent workspaces
+- [x] Task-scoped memory foundation
+- [x] Local Ollama provider
+- [x] Capability registry
+- [x] Approval-aware execution foundation
+- [x] Execution verification state
+- [x] Customer-oriented workspace UI
+- [ ] Real-time execution timeline
+- [ ] Fully populated memory/sources/files/artifacts panels
+
+### Next
+
+- Reliable end-to-end task execution with real Ollama models
+- Workspace conversation/history
+- Live tool and execution events
+- Better capability selection based on the actual objective
+- Search/source cards with evidence
+- Memory inspection and editing
+- File upload and analysis
+- Artifact generation and preview
+- Approval experience for consequential actions
+
+### Later
+
+- Coding and repository workflows
+- Documents and presentations
+- Browser-based workflows
+- Email/calendar integrations
+- GitHub workflows
+- Social publishing and other external services
+- Multi-step background jobs
+- Additional free/local model providers
+
+External services are capabilities, not the product itself. NEXUS should never become architecturally dependent on one service or model provider.
+
+## Trust & Safety
+
+NEXUS distinguishes between **producing information** and **taking action**.
+
+Read/analyze operations can generally be performed automatically when the required capability is available. Meaningful external/write operations — publishing, sending, deleting, submitting, changing external systems, and similar actions — require explicit approval under the current policy.
+
+A model response is not automatically treated as verified truth. The prototype can report that execution succeeded while still marking the result `unverified` when independent verification has not occurred.
+
+## Architecture
+
+The implementation is intentionally modular:
 
 - **FastAPI** — backend API
 - **LangGraph / LangChain Core** — orchestration and tool-calling foundation
 - **Ollama** — local/free inference path
-- **OpenAI-compatible providers** — interchangeable hosted model path
+- **OpenAI-compatible providers** — replaceable hosted path
 - **DDGS** — web-search capability
-- **Human-readable Markdown/YAML** — personality, core memory, task profiles, settings
-- **Task Workspaces** — isolate objective, task memory, artifacts, status, and future execution state
-- **Capability Registry** — central inventory of what NEXUS can actually do
-- **Permission Policy** — read/write/external risk levels and approval requirements
+- **Markdown/YAML** — customer-editable personality, memory, settings, and task profiles
+- **Task Workspaces** — persistent objective, memory, plan, events, artifacts, and state
+- **Capability Registry** — inventory of what NEXUS can actually do
+- **Permission Policy** — risk levels and approval requirements
 
-## Non-Negotiable Priorities
+### Workspace model
 
-1. **Actually work before looking impressive.** Do not add features without testing their integration.
-2. **Free/local first.** Prefer open-source software and free APIs. Never make a paid provider mandatory for core functionality.
-3. **Provider independence.** Model/API providers must be replaceable. A free provider disappearing must not destroy the architecture.
-4. **No hallucinated capabilities.** If a tool is unavailable, NEXUS must say so rather than claiming the task was completed.
-5. **Verify actions.** A successful API call is not automatically proof that the requested outcome happened. Verify state whenever possible.
-6. **Human approval for side effects.** Publishing, sending, deleting, submitting, modifying external systems, or other meaningful write/external actions require explicit approval unless the user deliberately changes the policy.
-7. **Task-scoped memory.** When the user assigns a task, create/select a workspace and allocate relevant memory to that task. Do not dump the user's entire memory into every prompt.
-8. **Core memory remains user-controlled.** Personality and durable user context must be easy to inspect and edit without touching Python.
-9. **Use existing projects intelligently.** Prefer mature GitHub projects and proven libraries over rebuilding standard infrastructure, but evaluate maintenance, licensing, reliability, security, and whether a dependency is genuinely needed.
-10. **Clean UI.** The interface should feel like a focused task workspace, not a developer console or generic chatbot.
+Each task gets its own workspace containing its objective, plan, task memory, events, artifacts, and execution state. Core/durable memory remains separate and is only made relevant to a task when appropriate.
 
-## User-Editable Configuration
+## Customer-Editable Configuration
 
 ```text
 config/
-├── personality.md       # How NEXUS behaves and communicates
-├── memory.md            # User-controlled durable/core memory
+├── personality.md       # How NEXUS communicates
+├── memory.md            # Durable user context
 ├── settings.yaml        # Models, features, limits
-├── tasks.yaml           # Optional task profiles and tool requirements
+└── tasks.yaml           # Task profiles and capability requirements
 ```
 
-Runtime task workspaces and task-scoped memory are stored under `data/` by
-default (or `NEXUS_DATA_DIR`), not in user-editable configuration.
+A normal personality or memory change should not require editing Python code.
 
-Normal personality, memory, and behavior changes should not require editing application code.
+Runtime workspaces live under `data/` by default and can be relocated with `NEXUS_DATA_DIR`.
 
-## Target Task Lifecycle
+## Local Prototype Setup
 
-```text
-Natural-language objective
-        ↓
-Intent / task understanding
-        ↓
-Create or resume workspace
-        ↓
-Select relevant core + task memory
-        ↓
-Discover required capabilities
-        ↓
-Check availability + permissions
-        ↓
-Create execution plan
-        ↓
-Execute tools / model reasoning
-        ↓
-Verify important outputs
-        ↓
-Request approval for side effects
-        ↓
-Execute approved external action
-        ↓
-Present result + evidence/artifacts
-        ↓
-Save only useful task memory
+### Requirements
+
+- Python 3.11+
+- Ollama
+- Node.js 20+ recommended for the frontend
+
+### Backend
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -e ".[dev]"
+uvicorn backend.main:app --reload
 ```
 
-## Target UI
+Install the model configured in `config/settings.yaml` and make sure Ollama is running.
 
-Inspired by the supplied product-demo reference, the UI should be a clean three-area task workspace:
+### Frontend
 
-- **Task sidebar** — new, active, and previous workspaces
-- **Main workspace** — objective, plan, execution state, conversation, and results
-- **Context panel** — relevant memory, sources, files, and artifacts
-- **Approval bar/modal** — unmistakable confirmation for external/write actions
-
-Tool activity should appear as compact human-readable states rather than raw framework logs.
-
-## Capability Model
-
-Capabilities are generic and should not be hard-coded around one service:
-
-```text
-READ
-- web search
-- read files
-- inspect data
-
-COMPUTE
-- calculator
-- Python/data analysis
-
-CREATE
-- documents
-- code
-- images/content
-
-EXTERNAL
-- GitHub
-- email
-- calendar
-- social platforms
-- browser/web actions
+```powershell
+cd frontend
+npm install
+npm run dev
 ```
 
-New capabilities should be implemented as adapters behind the capability registry and permission system.
+The Vite server will print the local URL. The frontend expects the API at `http://127.0.0.1:8000` by default; set `VITE_API_BASE` if required.
 
-## Model Strategy
+## Quality Checks
 
-Use a provider abstraction so NEXUS can choose among:
+```powershell
+pytest -q
+ruff check backend tests
+ruff format --check backend tests
+python -m compileall backend
+pip check
+```
 
-- local Ollama models
-- genuinely free hosted APIs
-- other OpenAI-compatible providers when available
+For UI changes:
 
-Free-model catalogues such as `12britz/awesome-free-models` may be used to discover candidates, but they are references, not dependencies. Before adopting a provider/model, check current availability, limits, authentication requirements, license, latency, context length, tool-calling support, and reliability.
+```powershell
+cd frontend
+npm run build
+```
 
-## Development Rules for Codex
+Do not claim a capability works without testing its end-to-end path. External services should have a local/mock test path where practical.
 
-When continuing development:
+## Development Rules
 
-1. Read this README and the files under `config/` before making architectural changes.
-2. Inspect the existing implementation before adding another framework or agent abstraction.
-3. Prefer small, testable modules.
-4. Keep secrets in `.env`; never place API keys in Markdown/YAML memory or source control.
-5. Add tests for important behavior, especially routing, memory isolation, permissions, tool execution, and verification.
-6. Do not claim a capability is implemented until its end-to-end path works.
-7. When a feature depends on an external service, provide a local/mock test path.
-8. Keep user-facing configuration simple and documented.
-9. Preserve backward compatibility where practical.
-10. If an external dependency is unreliable or paid, find a free/local alternative before making it core.
+1. Read this README and `config/` before changing architecture.
+2. Prefer mature existing open-source projects and libraries instead of rebuilding standard infrastructure.
+3. Evaluate dependencies for maintenance, licensing, reliability, security, and actual necessity.
+4. Keep modules small and testable.
+5. Never commit secrets or API keys.
+6. Keep the product understandable to a non-developer.
+7. Prefer customer-facing concepts over framework terminology.
+8. Preserve provider and capability boundaries.
+9. Keep task memory isolated.
+10. Fix underlying behavior rather than adding superficial UI workarounds.
 
-## Project Status
+## Free / Local Model Strategy
 
-🚧 Early architecture / task-engine phase. The next priority is to make the task lifecycle reliable end-to-end, then build the polished UI on top of it.
+NEXUS should prefer local and genuinely free inference. Candidate models and providers must be evaluated for availability, licensing, context length, tool-calling support, hardware requirements, latency, rate limits, and reliability.
 
-## Manual Local Lifecycle Test
+Repositories such as `12britz/awesome-free-models` can be used as discovery references, but are not product dependencies.
 
-This procedure exercises the local task path with a real Ollama model; it does
-not perform any external or write action.
+## Repository
 
-1. Install Ollama and pull the configured model: `ollama pull llama3.2`.
-2. In Python 3.11+, create and activate a virtual environment, then run
-   `pip install -e ".[dev]"`.
-3. Start Ollama (`ollama serve` when it is not already running), then start
-   NEXUS with `uvicorn backend.main:app --reload`.
-4. Create a research task with `POST /api/tasks/start`, using an objective such
-   as “Compare local models for a laptop.”
-5. Send `POST /api/tasks/{workspace_id}/run` with a follow-up request. Inspect
-   `GET /api/tasks/{workspace_id}` for the saved plan, status transitions,
-   tool events, and `verification_status`.
-6. Send `POST /api/tasks/{workspace_id}/resume` with a new follow-up request.
-   The workspace retains its plan, event history, and task-specific memory.
-
-Model-generated research remains `unverified` unless a future verifier checks
-the result against an independent source or state.
+NEXUS is currently an experimental prototype. The long-term goal is a trustworthy personal workbench that can take a broad range of real-world objectives from idea to useful outcome while keeping the customer in control.
