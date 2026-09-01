@@ -71,6 +71,19 @@ def get_workspace(workspace_id: str) -> TaskWorkspace | None:
     return TaskWorkspace(**json.loads(path.read_text(encoding="utf-8")))
 
 
+def list_workspaces() -> list[TaskWorkspace]:
+    root = workspace_root()
+    if not root.exists():
+        return []
+    workspaces: list[TaskWorkspace] = []
+    for path in root.glob("*.json"):
+        try:
+            workspaces.append(TaskWorkspace(**json.loads(path.read_text(encoding="utf-8"))))
+        except (OSError, json.JSONDecodeError, TypeError):
+            continue
+    return sorted(workspaces, key=lambda item: item.updated_at or item.created_at, reverse=True)
+
+
 def save_workspace(workspace: TaskWorkspace) -> TaskWorkspace:
     return _save(workspace)
 
