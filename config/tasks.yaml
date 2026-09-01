@@ -1,5 +1,6 @@
-# Task profiles are isolated units of work.
-# Add a task here before giving NEXUS access to new capabilities.
+# Task profiles are optional starting points, not permanent silos.
+# NEXUS creates/selects a task workspace from the user's request.
+# Add tools here when a new capability is implemented.
 
 profiles:
   general:
@@ -11,25 +12,25 @@ profiles:
   research:
     description: "Evidence-focused research and analysis"
     tools: [web_search, calculator]
-    memory_scope: core
+    memory_scope: task
     approval_required: false
 
   decision:
     description: "Structured decision support"
     tools: [web_search, calculator]
-    memory_scope: core
+    memory_scope: task
     approval_required: false
 
   content:
-    description: "Create and refine social/content material"
+    description: "Create and refine content"
     tools: [web_search]
-    memory_scope: core
+    memory_scope: task
     approval_required: true
 
-  instagram:
-    description: "Manage an Instagram Professional account"
-    tools: [web_search, instagram_read, instagram_draft, instagram_publish]
-    memory_scope: instagram
+  social_content:
+    description: "Plan, draft, review, and optionally publish social content"
+    tools: [web_search]
+    memory_scope: task
     approval_required: true
 
-# New task profiles can be added without changing the Python routing code.
+# Add a new profile without changing the agent code.
