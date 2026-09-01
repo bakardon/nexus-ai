@@ -34,3 +34,10 @@ export async function getTask(workspaceId: string): Promise<Workspace> {
   if (!response.ok) throw new Error('Workspace not found');
   return response.json();
 }
+
+export async function listTasks(): Promise<Workspace[]> {
+  const response = await fetch(`${API_BASE}/api/tasks`);
+  if (!response.ok) throw new Error('Could not load workspaces');
+  const data = await response.json();
+  return data.workspaces ?? data.tasks ?? data;
+}
