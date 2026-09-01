@@ -21,7 +21,9 @@ def infer_intent(message: str) -> TaskIntent:
     is_action = any(word in text for word in action_words)
 
     if is_action:
-        task_type = "action"
+        # Generic requested actions are handled conservatively by the content
+        # profile, which requires approval before write/external execution.
+        task_type = "content"
     elif needs_web:
         task_type = "research"
     elif any(word in text for word in ("should i", "decide", "decision", "worth it")):

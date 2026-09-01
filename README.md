@@ -41,9 +41,10 @@ config/
 ├── memory.md            # User-controlled durable/core memory
 ├── settings.yaml        # Models, features, limits
 ├── tasks.yaml           # Optional task profiles and tool requirements
-└── memory/
-    └── tasks/           # Workspace-specific memory created during tasks
 ```
+
+Runtime task workspaces and task-scoped memory are stored under `data/` by
+default (or `NEXUS_DATA_DIR`), not in user-editable configuration.
 
 Normal personality, memory, and behavior changes should not require editing application code.
 
@@ -145,3 +146,24 @@ When continuing development:
 ## Project Status
 
 🚧 Early architecture / task-engine phase. The next priority is to make the task lifecycle reliable end-to-end, then build the polished UI on top of it.
+
+## Manual Local Lifecycle Test
+
+This procedure exercises the local task path with a real Ollama model; it does
+not perform any external or write action.
+
+1. Install Ollama and pull the configured model: `ollama pull llama3.2`.
+2. In Python 3.11+, create and activate a virtual environment, then run
+   `pip install -e ".[dev]"`.
+3. Start Ollama (`ollama serve` when it is not already running), then start
+   NEXUS with `uvicorn backend.main:app --reload`.
+4. Create a research task with `POST /api/tasks/start`, using an objective such
+   as “Compare local models for a laptop.”
+5. Send `POST /api/tasks/{workspace_id}/run` with a follow-up request. Inspect
+   `GET /api/tasks/{workspace_id}` for the saved plan, status transitions,
+   tool events, and `verification_status`.
+6. Send `POST /api/tasks/{workspace_id}/resume` with a new follow-up request.
+   The workspace retains its plan, event history, and task-specific memory.
+
+Model-generated research remains `unverified` unless a future verifier checks
+the result against an independent source or state.

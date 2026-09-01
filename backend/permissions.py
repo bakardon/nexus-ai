@@ -18,5 +18,17 @@ TOOL_PERMISSIONS = {
 }
 
 
+class ApprovalRequiredError(PermissionError):
+    pass
+
+
 def requires_approval(tool_names: list[str]) -> bool:
-    return any(TOOL_PERMISSIONS.get(name, ToolPermission(name, "external", True)).requires_approval for name in tool_names)
+    return any(
+        TOOL_PERMISSIONS.get(name, ToolPermission(name, "external", True)).requires_approval
+        for name in tool_names
+    )
+
+
+def require_approval(tool_names: list[str], approved: bool) -> None:
+    if requires_approval(tool_names) and not approved:
+        raise ApprovalRequiredError("This task requires explicit approval before execution.")

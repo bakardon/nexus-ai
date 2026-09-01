@@ -9,7 +9,7 @@ services:
   nexus:
     build: .
     environment:
-      OLLAMA_BASE_URL: http://ollama:11434
+      NEXUS_OLLAMA_BASE_URL: http://ollama:11434
       NEXUS_DEFAULT_PROVIDER: ollama
       NEXUS_DEFAULT_MODEL: llama3.2
     ports:

@@ -1,9 +1,8 @@
-from langchain_core.tools import tool
 from ddgs import DDGS
+from langchain_core.tools import tool
 
 
 @tool
-
 def web_search(query: str) -> str:
     """Search the public web for current information and return several results."""
     results = DDGS().text(query, region="wt-wt", safesearch="moderate", max_results=5)

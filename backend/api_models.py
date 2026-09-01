@@ -12,7 +12,12 @@ class ChatRequest(BaseModel):
 
 class WorkspaceRequest(BaseModel):
     objective: str = Field(min_length=1)
-    task_type: str = "general"
+    task_type: str | None = None
+
+
+class TaskRunRequest(BaseModel):
+    message: str = Field(min_length=1)
+    approved: bool = False
 
 
 class MemoryRequest(BaseModel):

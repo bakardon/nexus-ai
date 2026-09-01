@@ -11,3 +11,6 @@ This folder is intentionally easy to edit.
 You should not need to edit Python code for normal customization.
 
 API keys belong in `.env`, which is ignored by Git. Start from `.env.example`.
+
+Runtime settings can be overridden with `NEXUS_` environment variables, for
+example `NEXUS_DEFAULT_MODEL` and `NEXUS_OLLAMA_BASE_URL`.

@@ -6,6 +6,7 @@ COPY pyproject.toml .
 RUN pip install --no-cache-dir .
 
 COPY backend ./backend
+COPY config ./config
 
 EXPOSE 8000
 

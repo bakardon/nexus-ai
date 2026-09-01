@@ -4,7 +4,6 @@ from typing import Any
 
 import yaml
 
-
 ROOT = Path(__file__).resolve().parents[1]
 TASKS_FILE = ROOT / "config" / "tasks.yaml"
 
@@ -35,4 +34,11 @@ def load_task_profiles() -> dict[str, TaskProfile]:
 
 def get_task_profile(name: str | None) -> TaskProfile:
     profiles = load_task_profiles()
-    return profiles.get(name or "general", profiles["general"])
+    if "general" not in profiles:
+        raise ValueError("config/tasks.yaml must define a general profile")
+    if name is None:
+        return profiles["general"]
+    try:
+        return profiles[name]
+    except KeyError as exc:
+        raise ValueError(f"Unknown task profile: {name}") from exc

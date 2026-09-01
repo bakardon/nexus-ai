@@ -1,35 +1,54 @@
 from dataclasses import asdict
 
-from .capabilities import capability_status
-from .memory import build_memory_context
+from .capabilities import require_available_capabilities
 from .task_intent import infer_intent
 from .task_registry import get_task_profile
-from .workspace import TaskWorkspace, create_workspace, get_workspace
+from .workspace import (
+    TaskWorkspace,
+    create_workspace,
+    get_workspace,
+    save_workspace,
+    transition_workspace,
+)
 
 
 class TaskEngineError(RuntimeError):
     pass
 
 
-def start_task(message: str) -> tuple[TaskWorkspace, dict]:
+def start_task(message: str, requested_task_type: str | None = None) -> tuple[TaskWorkspace, dict]:
     intent = infer_intent(message)
-    profile = get_task_profile(intent.task_type)
-    workspace = create_workspace(intent.objective, intent.task_type)
+    profile = get_task_profile(requested_task_type or intent.task_type)
+    workspace = create_workspace(intent.objective, profile.name)
 
     requested = list(profile.tools)
-    capabilities = [capability_status(name) for name in requested]
-    unavailable = [cap.name for cap in capabilities if cap is not None and not cap.available]
+    capabilities = require_available_capabilities(requested)
 
     plan = {
         "intent": asdict(intent),
-        "workspace": workspace.id,
+        "objective": workspace.objective,
         "tools": requested,
-        "unavailable_tools": unavailable,
+        "capabilities": [cap.name for cap in capabilities],
         "requires_approval": profile.approval_required,
         "memory_scope": profile.memory_scope,
-        "memory": build_memory_context(profile.memory_scope, workspace.id),
+        "steps": [
+            {"id": "understand", "description": "Understand the objective", "status": "completed"},
+            {
+                "id": "execute",
+                "description": "Use the local model and allowed capabilities",
+                "status": "planned",
+            },
+            {
+                "id": "review",
+                "description": "Review the output and its verification state",
+                "status": "planned",
+            },
+        ],
     }
-    return workspace, plan
+    workspace.plan = plan
+    transition_workspace(workspace, "planned", "Workspace created and execution plan prepared")
+    save_workspace(workspace)
+    return workspace, workspace.plan
 
 
 def require_workspace(workspace_id: str) -> TaskWorkspace:
