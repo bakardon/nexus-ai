@@ -5,8 +5,9 @@ from .agents import run_local_agent
 from .config import get_settings
 from .providers import ProviderError, chat
 from .router import choose_route
+from .task_registry import get_task_profile, load_task_profiles
 
-app = FastAPI(title="NEXUS AI", version="0.3.0")
+app = FastAPI(title="NEXUS AI", version="0.5.0")
 
 
 class ChatRequest(BaseModel):
@@ -19,9 +20,11 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     response: str
+    task: str
     provider: str
     model: str
     route_reason: str
+    approval_required: bool
 
 
 @app.get("/health")
@@ -29,16 +32,22 @@ async def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
+@app.get("/api/tasks")
+async def tasks() -> list[dict]:
+    return [profile.__dict__ for profile in load_task_profiles().values()]
+
+
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat_endpoint(request: ChatRequest) -> ChatResponse:
     settings = get_settings()
-    route = choose_route(request.task)
+    profile = get_task_profile(request.task)
+    route = choose_route(profile.name)
     provider = request.provider or route.provider
     model = request.model or route.model or settings.default_model
 
     try:
         if request.use_tools and provider == "ollama":
-            response = await run_local_agent(request.message)
+            response = await run_local_agent(request.message, profile.name)
         else:
             response = await chat(
                 [{"role": "user", "content": request.message}],
@@ -52,7 +61,9 @@ async def chat_endpoint(request: ChatRequest) -> ChatResponse:
 
     return ChatResponse(
         response=response,
+        task=profile.name,
         provider=provider,
         model=model,
         route_reason=route.reason,
+        approval_required=profile.approval_required,
     )
