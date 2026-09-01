@@ -17,3 +17,7 @@ class WorkspaceRequest(BaseModel):
 
 class MemoryRequest(BaseModel):
     entry: str = Field(min_length=1)
+
+
+class ApprovalRequest(BaseModel):
+    approved: bool
