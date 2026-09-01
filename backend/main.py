@@ -8,6 +8,7 @@ from .config import get_settings
 from .providers import ProviderError, chat
 from .task_engine import TaskEngineError, start_task
 from .task_registry import get_task_profile, load_task_profiles
+from .verification import inspect_output
 from .workspace import (
     get_workspace,
     record_event,
@@ -16,7 +17,7 @@ from .workspace import (
     update_plan_step,
 )
 
-app = FastAPI(title="NEXUS AI", version="0.6.0")
+app = FastAPI(title="NEXUS AI", version="0.7.0")
 
 
 @app.get("/health")
@@ -99,7 +100,10 @@ async def _execute_task(
     update_plan_step(workspace, "execute", "in_progress")
     save_workspace(workspace)
 
+    tool_events: list[dict] = []
+
     async def record_tool_event(event: dict) -> None:
+        tool_events.append(event)
         record_event(
             workspace,
             "in_progress" if event["status"] != "failed" else "failed",
@@ -129,29 +133,30 @@ async def _execute_task(
         save_workspace(workspace)
         raise HTTPException(status_code=500, detail=f"Task execution failed: {exc}") from exc
 
+    verification = inspect_output(response, tool_events)
     update_plan_step(workspace, "execute", "completed")
-    update_plan_step(
-        workspace, "review", "unverified", "No independent output verifier is configured"
-    )
-    workspace.verification_status = "unverified"
+    update_plan_step(workspace, "review", verification.status, verification.note)
+    workspace.verification_status = verification.status
     transition_workspace(
         workspace,
-        "completed",
-        "Local model execution completed; output remains unverified",
+        "completed" if verification.execution_ok else "failed",
+        verification.note,
     )
     save_workspace(workspace)
+
     from .memory import append_task_memory
 
     append_task_memory(
         workspace.id,
-        f"Run result (unverified): {response[:4000]}",
+        f"Run result ({verification.status}): {response[:4000]}",
     )
     return {
         "workspace": asdict(workspace),
         "response": response,
         "capabilities": list(profile.tools),
-        "verified": False,
-        "verification_note": "Model responses are not independently verified in this milestone.",
+        "verified": verification.verified,
+        "verification_status": verification.status,
+        "verification_note": verification.note,
     }
 
 
