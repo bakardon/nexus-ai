@@ -11,6 +11,7 @@ from .task_registry import get_task_profile, load_task_profiles
 from .verification import inspect_output
 from .workspace import (
     get_workspace,
+    list_workspaces,
     record_event,
     save_workspace,
     transition_workspace,
@@ -27,7 +28,7 @@ async def health() -> dict[str, str]:
 
 @app.get("/api/tasks")
 async def tasks() -> list[dict]:
-    return [profile.__dict__ for profile in load_task_profiles().values()]
+    return [asdict(workspace) for workspace in list_workspaces()]
 
 
 @app.post("/api/tasks/start")
