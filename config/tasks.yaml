@@ -1,0 +1,35 @@
+# Task profiles are isolated units of work.
+# Add a task here before giving NEXUS access to new capabilities.
+
+profiles:
+  general:
+    description: "General assistant"
+    tools: [web_search, calculator]
+    memory_scope: core
+    approval_required: false
+
+  research:
+    description: "Evidence-focused research and analysis"
+    tools: [web_search, calculator]
+    memory_scope: core
+    approval_required: false
+
+  decision:
+    description: "Structured decision support"
+    tools: [web_search, calculator]
+    memory_scope: core
+    approval_required: false
+
+  content:
+    description: "Create and refine social/content material"
+    tools: [web_search]
+    memory_scope: core
+    approval_required: true
+
+  instagram:
+    description: "Manage an Instagram Professional account"
+    tools: [web_search, instagram_read, instagram_draft, instagram_publish]
+    memory_scope: instagram
+    approval_required: true
+
+# New task profiles can be added without changing the Python routing code.
