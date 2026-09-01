@@ -1,0 +1,21 @@
+# Main user-editable NEXUS behavior settings.
+# Keep secrets in .env, never here.
+
+assistant:
+  name: NEXUS
+  personality_file: config/personality.md
+  memory_file: config/memory.md
+
+models:
+  default_provider: ollama
+  default_model: llama3.2
+
+features:
+  web_search: true
+  calculator: true
+  memory: true
+  research_agent: true
+  decision_agent: true
+
+limits:
+  max_agent_steps: 5
